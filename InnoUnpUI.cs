@@ -23,16 +23,14 @@ namespace InnoUnpUI {
             };
             txtExecPath.Text = Path.GetDirectoryName(Application.ExecutablePath) + @"\" + "innounp.exe";
             txtTargetPath.Text = Application.StartupPath;
-            if (!Application.CurrentCulture.Name.StartsWith("zh"))
-                SetEnglish();
-#if DEBUG
-            //SetEnglish();
-            txtExecPath.Text = @"D:\程序\!工具\!文件相关\解包器\Installs\Inno\innounp\innounp.exe";
-            txtFilePath.Text = @"C:\Users\TF2017\Desktop\UiBot Creator_community_official_zh-cn_x64_V2020.09.28.0226.exe";
-#endif
+            SetLocale();
         }
 
         #region 输入
+        private string ExecPath = "";
+        private string FilePath = "";
+        private string TargetPath = "";
+
         private void btnOpenExec_Click(object sender, EventArgs e) {
             openFileDialog1.Filter = "*.exe|*.exe";
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
@@ -66,19 +64,20 @@ namespace InnoUnpUI {
                 SetErrColor(box);
             }
         }
-        private bool VaildExecPath()
-            => File.Exists(txtExecPath.Text) && Path.GetExtension(txtExecPath.Text) == ".exe";
-        private bool VaildFilePath()
-            => File.Exists(txtFilePath.Text);
+
+        private bool VaildExecPath() => File.Exists(txtExecPath.Text)
+                && Path.GetExtension(txtExecPath.Text) == ".exe";
+        private bool VaildFilePath() => File.Exists(txtFilePath.Text);
         private bool VaildTargetPath() {
             try {
                 var p = txtTargetPath.Text;
-                return Path.IsPathRooted(p) &&
-                    Directory.Exists(Path.GetPathRoot(p));
+                return Path.IsPathRooted(p)
+                    && Directory.Exists(Path.GetPathRoot(p));
             } catch {
                 return false;
             }
         }
+
         private void txtExecPath_TextChanged(object sender, EventArgs e) {
             if (VaildExecPath())
                 SetOkColor(txtExecPath);
@@ -97,10 +96,8 @@ namespace InnoUnpUI {
             else
                 SetErrColor(txtTargetPath);
         }
-
-        private string ExecPath = "";
-        private string FilePath = "";
-        private string TargetPath = "";
+        #endregion
+        #region 读取
         private void btnLoadFile_Click(object sender, EventArgs e) {
             var invalid = false;
             if (!VaildExecPath()) {
@@ -134,13 +131,6 @@ namespace InnoUnpUI {
             FileInfo = GetFileList(exePath, filePath, out string tip, StatusSetter);
             if (StatusSetter != null) statusLabelTitle.Text = CulDict["建文件树"];
             if (FileInfo != null) {
-                /*var enumor = FileInfo.Keys.GetEnumerator();
-                while (enumor.MoveNext()) {
-                    var cur = enumor.Current;
-                    FileList.Add(cur);
-                    StatusSetter?.Invoke(cur);
-                    AddTreeNode(cur, root);
-                }*/
                 var tFileInfo = new Dictionary<string, (long size, DateTime time)>();
                 FileList = FileInfo.Keys.ToList();
                 FileList.Sort();
@@ -162,8 +152,9 @@ namespace InnoUnpUI {
             treeView1.EndUpdate();
         }
 
-        private static Dictionary<string, (long size, DateTime time)>
-        GetFileList(string exePath, string filePath, out string tip, Action<string> statusSetter = null) {
+        private static Dictionary<string, (long size, DateTime time)> GetFileList(
+            string exePath, string filePath, out string tip, Action<string> statusSetter = null
+        ) {
             var ps = new ProcessStartInfo {
                 FileName = exePath,
                 Arguments = AddQuote(filePath),
@@ -409,7 +400,8 @@ namespace InnoUnpUI {
             return ps.Arguments;
         }
         #endregion
-        #region 界面
+
+        #region locale
         private static Dictionary<string, string> CulDict = new Dictionary<string, string> {
             { "读文件名", "读文件名" },
             { "建文件树", "建文件树" },
@@ -456,7 +448,18 @@ namespace InnoUnpUI {
             下层全选MenuItem  .Text = 下层 + 全选;
             下层反选MenuItem  .Text = 下层 + 反选;
             下层选文件MenuItem.Text = 下层 + 选文件;
-    }
+        }
+        private void SetLocale() {
+            if (!Application.CurrentCulture.Name.StartsWith("zh"))
+                SetEnglish();
+#if DEBUG
+            //SetEnglish();
+            txtExecPath.Text = @"D:\程序\!工具\!文件相关\解包器\Installs\Inno\innounp\innounp.exe";
+            txtFilePath.Text = @"C:\Users\TF2017\Desktop\UiBot Creator_community_official_zh-cn_x64_V2020.09.28.0226.exe";
+#endif
+        }
+        #endregion
+        #region status
         private void statusLabelContent_Click(object sender, EventArgs e)
             => Clipboard.SetText(statusLabelContent.Text);
         private void ChangeStatus(string ctx, string title) {
@@ -471,6 +474,8 @@ namespace InnoUnpUI {
             statusLabelContent.Text = str;
             Application.DoEvents();
         }
+        #endregion
+        #region sizing
         private bool CtrlDown = false;
         private float TreeSizeTmp = 0;
         private float ListSizeTmp = 0;
@@ -516,11 +521,9 @@ namespace InnoUnpUI {
             btnLoadFile.Width   = width;
         }
         #endregion
-        #region 辅助
-        private static string AddQuote(string str)
-            => "\"" + str.Trim('"') + "\"";
-        private static string RightAlign(string str)
-            => new string(' ', 8 - str.Length) + str;
+        #region helpers
+        private static string AddQuote(string str) => "\"" + str.Trim('"') + "\"";
+        private static string RightAlign(string str) => new String(' ', 8 - str.Length) + str;
         private static string FriendSize(long size) {
             if (size == 0L) return "0";
             string unit = "BKMGTPE";

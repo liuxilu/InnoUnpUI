@@ -47,7 +47,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BrowserFolderWithOpenFileDialog.cs" />
     <Compile Include="InnoUnpUI.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -56,6 +55,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="VistaFolderDialog.cs" />
     <EmbeddedResource Include="InnoUnpUI.resx">
       <DependentUpon>InnoUnpUI.cs</DependentUpon>
     </EmbeddedResource>

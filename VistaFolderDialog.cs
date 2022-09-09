@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Windows.Forms;
 
-public static class BrowserFolderWithOpenFileDialog {
+public static class VistaFolderDialog {
     #region Reflection Infos
     private static readonly Assembly asmForm = typeof(Form).Assembly;
     private static readonly Type     typeFD  = typeof(FileDialog);
