@@ -10,26 +10,24 @@ using System.Collections.Generic;
 
 namespace InnoUnpUI {
     public partial class InnoUnpUI : Form {
-        private readonly Dictionary<object, Action<IEnumerator>> MenuMap = null;
         public InnoUnpUI() {
             InitializeComponent();
-            MenuMap = new Dictionary<object, Action<IEnumerator>> {
-                    { 本层全选MenuItem,   全选   },
-                    { 本层反选MenuItem,   反选   },
-                    { 本层选文件MenuItem, 选文件 },
-                    { 下层全选MenuItem,   全选   },
-                    { 下层反选MenuItem,   反选   },
-                    { 下层选文件MenuItem, 选文件 }
-            };
+            SetMenuMap();
             txtExecPath.Text = Path.GetDirectoryName(Application.ExecutablePath) + @"\" + "innounp.exe";
-            txtTargetPath.Text = Application.StartupPath;
+            txtTargetPath.Text = Application.StartupPath + @"\" + Path.GetRandomFileName();
             SetLocale();
+#if DEBUG
+            txtExecPath.Text = @"D:\程序\!工具\!文件相关\解包器\Installs\Inno\innounp\innounp.exe";
+            txtFilePath.Text = @"C:\Users\TF2017\Desktop\RoboMirror 2.0 Setup.exe";
+#endif
         }
 
         #region 输入
-        private string ExecPath = "";
-        private string FilePath = "";
-        private string TargetPath = "";
+        private bool FileUnread = true;
+
+        private string ExecPath = null;
+        private string FilePath = null;
+        private string TargetPath = null;
 
         private void btnOpenExec_Click(object sender, EventArgs e) {
             openFileDialog1.Filter = "*.exe|*.exe";
@@ -42,33 +40,15 @@ namespace InnoUnpUI {
                 txtFilePath.Text = openFileDialog1.FileName;
         }
         private void btnOpenTarget_Click(object sender, EventArgs e) {
+            openFileDialog1.Filter = "";
             if (openFileDialog1.ShowFolderDialog() == DialogResult.OK)
                 txtTargetPath.Text = openFileDialog1.FileName;
         }
 
-        private void SetOkColor(TextBox box) {
-            box.BackColor = SystemColors.Window;
-            box.ForeColor = Color.Black;
-        }
-        private void SetErrColor(TextBox box) {
-            box.BackColor = Color.FromArgb(255, 0xFF, 0x33, 0x33);
-            box.ForeColor = Color.White;
-        }
-        private void ErrFlash(TextBox box) {
-            for (int i = 0; i < 3; i++) {
-                System.Threading.Thread.Sleep(100);
-                Application.DoEvents();
-                SetOkColor(box);
-                System.Threading.Thread.Sleep(100);
-                Application.DoEvents();
-                SetErrColor(box);
-            }
-        }
-
-        private bool VaildExecPath() => File.Exists(txtExecPath.Text)
+        private bool ValidExecPath() => File.Exists(txtExecPath.Text)
                 && Path.GetExtension(txtExecPath.Text) == ".exe";
-        private bool VaildFilePath() => File.Exists(txtFilePath.Text);
-        private bool VaildTargetPath() {
+        private bool ValidFilePath() => File.Exists(txtFilePath.Text);
+        private bool ValidTargetPath() {
             try {
                 var p = txtTargetPath.Text;
                 return Path.IsPathRooted(p)
@@ -79,83 +59,81 @@ namespace InnoUnpUI {
         }
 
         private void txtExecPath_TextChanged(object sender, EventArgs e) {
-            if (VaildExecPath())
+            if (ValidExecPath()) {
                 SetOkColor(txtExecPath);
-            else
+                ExecPath = txtExecPath.Text;
+            } else {
                 SetErrColor(txtExecPath);
+                ExecPath = null;
+            }
         }
         private void txtFilePath_TextChanged(object sender, EventArgs e) {
-            if (VaildFilePath())
+            if (ValidFilePath()) {
                 SetOkColor(txtFilePath);
-            else
+                FilePath = txtFilePath.Text;
+                FileUnread = true;
+            } else {
                 SetErrColor(txtFilePath);
+                FilePath = null;
+            }
         }
         private void txtTargetPath_TextChanged(object sender, EventArgs e) {
-            if (VaildTargetPath())
+            if (ValidTargetPath()) {
                 SetOkColor(txtTargetPath);
-            else
+                TargetPath = txtTargetPath.Text;
+            } else {
                 SetErrColor(txtTargetPath);
+                TargetPath = null;
+            }
         }
         #endregion
         #region 读取
-        private void btnLoadFile_Click(object sender, EventArgs e) {
-            var invalid = false;
-            if (!VaildExecPath()) {
-                ErrFlash(txtExecPath);
-                invalid = true;
-            }
-            if (!VaildFilePath()) {
-                ErrFlash(txtFilePath);
-                invalid = true;
-            }
-            if (!VaildTargetPath()) {
-                ErrFlash(txtTargetPath);
-                invalid = true;
-            }
-            if (invalid) return;
-            ExecPath = txtExecPath.Text;
-            FilePath = txtFilePath.Text;
-            TargetPath = txtTargetPath.Text;
-            NewInputFile(ExecPath, FilePath);
+        private void btnRead_Click(object sender, EventArgs e) {
+            if (ExecPath == null) { ErrFlash(txtExecPath); return; }
+            if (FilePath == null) { ErrFlash(txtFilePath); return; }
+
+            ReadFile(ExecPath, FilePath);
         }
 
-        List<string> FileList = new List<string>();
-        Dictionary<string, (long size, DateTime time)> FileInfo = null;
-        private void NewInputFile(string exePath, string filePath) {
+        List<string> ItemList = new List<string>();
+        Dictionary<string, (long size, DateTime time)> ItemInfo;
+        private void ReadFile(string exePath, string filePath) {
+            var setter = StatusSetter;
             var sw = Stopwatch.StartNew();
             listBox1.Items.Clear();
             treeView1.Nodes.Clear();
             treeView1.BeginUpdate();
-            var root = treeView1.Nodes.Add(filePath, Path.GetFileName(filePath));
-            if (StatusSetter != null) statusLabelTitle.Text = CulDict["读文件名"];
-            FileInfo = GetFileList(exePath, filePath, out string tip, StatusSetter);
-            if (StatusSetter != null) statusLabelTitle.Text = CulDict["建文件树"];
-            if (FileInfo != null) {
-                var tFileInfo = new Dictionary<string, (long size, DateTime time)>();
-                FileList = FileInfo.Keys.ToList();
-                FileList.Sort();
-                FileList.ForEach(cur => {
-                    tFileInfo.Add(cur, FileInfo[cur]);
-                    StatusSetter?.Invoke(cur);
+            var root = treeView1.Nodes.Add(@"*", Path.GetFileName(filePath));
+            if (setter != null) statusLabelTitle.Text = LocDict.读文件名;
+            ItemInfo = GetFileList(exePath, filePath, out string tip, setter);
+            if (setter != null) statusLabelTitle.Text = LocDict.建文件树;
+            if (ItemInfo != null) {
+                var tmpInfo = new Dictionary<string, (long size, DateTime time)>();
+                ItemList = ItemInfo.Keys.ToList();
+                ItemList.Sort();
+                ItemList.ForEach(cur => {
+                    tmpInfo.Add(cur, ItemInfo[cur]);
+                    setter?.Invoke(cur);
                     AddTreeNode(cur, root);
                 });
-                FileInfo = tFileInfo;
+                ItemInfo = tmpInfo;
                 
-                if (StatusSetter != null) statusLabelTitle.Text = "";
-                StatusSetter?.Invoke(CulDict["量目录"]);
+                if (setter != null) statusLabelTitle.Text = "";
+                setter?.Invoke(LocDict.量目录);
                 CalcDirSize(treeView1.Nodes);
-                StatusSetter?.Invoke(CulDict["排序"]);
+                setter?.Invoke(LocDict.排序);
                 SortTreeNodes(treeView1.Nodes);
             }
             sw.Stop();
-            ChangeStatus(sw.Elapsed.ToString() + "|" + tip, CulDict["用时"]);
+            SetStatus(sw.Elapsed.ToString() + "|" + tip, LocDict.用时);
             treeView1.EndUpdate();
+            FileUnread = false;
         }
 
         private static Dictionary<string, (long size, DateTime time)> GetFileList(
             string exePath, string filePath, out string tip, Action<string> statusSetter = null
         ) {
-            var ps = new ProcessStartInfo {
+            var ps = new ProcessStartInfo() {
                 FileName = exePath,
                 Arguments = AddQuote(filePath),
                 UseShellExecute = false,
@@ -163,14 +141,12 @@ namespace InnoUnpUI {
                 RedirectStandardError = true,
                 CreateNoWindow = true
             };
-            var p = new Process {
-                StartInfo = ps
-            };
+            var p = new Process() { StartInfo = ps };
             p.Start();
             var errTxt = p.StandardOutput.ReadToEnd();
             p.WaitForExit();
             if (p.ExitCode != 0) {
-                tip = CulDict["出错"] + errTxt.Replace("\r\n", "");
+                tip = LocDict.错误 + errTxt.Replace("\r\n", "");
                 p.Close();
                 return null;
             }
@@ -180,8 +156,8 @@ namespace InnoUnpUI {
             var stdout = p.StandardOutput;
             _ = stdout.ReadLine();
             var head = stdout.ReadLine();
-            int tOff = head.IndexOf("Time");
-            int fOff = head.IndexOf("Filename");
+            int tOff = head.IndexOf("Time", StringComparison.Ordinal);
+            int fOff = head.IndexOf("Filename", StringComparison.Ordinal);
             int timeLen = fOff - tOff;
             _ = stdout.ReadLine();
             var data = new Dictionary<string, (long size, DateTime time)>();
@@ -214,7 +190,7 @@ namespace InnoUnpUI {
                     long size;
                     TreeNode node;
                     if (i == len - 1) {
-                        size = FileInfo[name.Substring(1)].size;
+                        size = ItemInfo[name.Substring(1)].size;
                     } else {
                         node = nodes.Add(name, dirs[i]);
                         for (i++; i < len - 1; i++) {
@@ -223,7 +199,7 @@ namespace InnoUnpUI {
                         }
                         name = name + @"\" + dirs[i];
                         nodes = node.Nodes;
-                        size = FileInfo[name.Substring(1)].size;
+                        size = ItemInfo[name.Substring(1)].size;
                     }
                     node = nodes.Add(name, RightAlign(FriendSize(size)) + "|" + dirs[i]);
                     node.Tag = size;
@@ -246,14 +222,14 @@ namespace InnoUnpUI {
                     files.Add(nodes[i]);
                 }
             }
+
             string func(TreeNode a) => a.Text;
             string funcSplit(TreeNode a) => a.Text.Split('|')[1];
             Func<TreeNode, string> dirFunc = func;
             Func<TreeNode, string> fileFunc = func;
-            if (DirHasSize)
-                dirFunc = funcSplit;
-            if (FileHasSize)
-                fileFunc = funcSplit;
+            if (DirHasSize) dirFunc = funcSplit;
+            if (FileHasSize) fileFunc = funcSplit;
+
             nodes.Clear();
             if (DirFirst) {
                 nodes.AddRange(dirs.OrderBy(dirFunc).ToArray());
@@ -281,28 +257,28 @@ namespace InnoUnpUI {
         private long SelSize = 0;
         private void ListAdd(TreeNode node) {
             var name = node.Name;
-            if (name[1] != ':') {
+            if (name != @"*") {
                 name = name.Substring(1);
-                if (node.Nodes.Count > 0) name += "\\*";
-                listBox1.Items.Add(name);
-                SelSize += (long)node.Tag;
-                ChangeStatus(FriendSize(SelSize), CulDict["已选择"]);
+                if (node.Nodes.Count > 0) name += @"\*";
             }
+            listBox1.Items.Add(name);
+            SelSize += (long)node.Tag;
+            SetStatus(FriendSize(SelSize), LocDict.已选择);
         }
         private void ListRemove(TreeNode node) {
             var name = node.Name;
-            if (name[1] != ':') {
+            if (name != @"*") {
                 name = name.Substring(1);
-                if (node.Nodes.Count > 0) name += "\\*";
-                listBox1.Items.Remove(name);
-                SelSize -= (long)node.Tag;
-                ChangeStatus(FriendSize(SelSize), CulDict["已选择"]);
+                if (node.Nodes.Count > 0) name += @"\*";
             }
+            listBox1.Items.Remove(name);
+            SelSize -= (long)node.Tag;
+            SetStatus(FriendSize(SelSize), LocDict.已选择);
         }
 
-        private bool UserCheck = true;
+        private bool UpdateCheck = true;
         private void treeView1_AfterCheck(object sender, TreeViewEventArgs e) {
-            if (UserCheck) {
+            if (UpdateCheck) {
                 var node = e.Node;
                 if (node.Checked)
                     ListAdd(node);
@@ -310,28 +286,65 @@ namespace InnoUnpUI {
                     ListRemove(node);
             }
         }
+        private void treeView1_MouseDown(object sender, MouseEventArgs e) {
+            if (e.Button == MouseButtons.Right) {
+                var hit = treeView1.HitTest(e.Location);
+                if (hit.Node != null) {
+                    treeView1.SelectedNode = hit.Node;
+                }
+            }
+        }
+
+        private Dictionary<object, Action<IEnumerator>> MenuMap;
+        void SetMenuMap() {
+            MenuMap = new Dictionary<object, Action<IEnumerator>> {
+                { 本层全选MenuItem,   全选   },
+                { 本层全不选MenuItem, 全不选 },
+                { 本层反选MenuItem,   反选   },
+                { 本层选文件MenuItem, 选文件 },
+
+                { 下层全选MenuItem,   全选   },
+                { 下层全不选MenuItem, 全不选 },
+                { 下层反选MenuItem,   反选   },
+                { 下层选文件MenuItem, 选文件 }
+            };
+        }
+
         private void 下层选MenuItem_Click(object sender, EventArgs e) {
-            UserCheck = false;
+            UpdateCheck = false;
             var p = treeView1.SelectedNode;
             if (p == null) return;
             MenuMap[sender](p.Nodes.GetEnumerator());
-            UserCheck = true;
+            UpdateCheck = true;
         }
         private void 本层选MenuItem_Click(object sender, EventArgs e) {
-            UserCheck = false;
+            UpdateCheck = false;
             var p = treeView1.SelectedNode;
             if (p == null) return;
             p = p.Parent;
-            if (p == null) return;
-            MenuMap[sender](p.Nodes.GetEnumerator());
-            UserCheck = true;
+            if (p != null) {
+                MenuMap[sender](p.Nodes.GetEnumerator());
+            } else {
+                MenuMap[sender](treeView1.Nodes.GetEnumerator());
+            }
+            UpdateCheck = true;
         }
+
         private void 全选(IEnumerator enumor) {
             while (enumor.MoveNext()) {
                 var cur = (TreeNode)enumor.Current;
                 if (cur.Checked == false) {
                     cur.Checked = true;
                     ListAdd(cur);
+                }
+            }
+        }
+        private void 全不选(IEnumerator enumor) {
+            while (enumor.MoveNext()) {
+                var cur = (TreeNode)enumor.Current;
+                if (cur.Checked == true) {
+                    cur.Checked = false;
+                    ListRemove(cur);
                 }
             }
         }
@@ -359,26 +372,39 @@ namespace InnoUnpUI {
         #endregion
         #region 提取
         private void btnExtract_Click(object sender, EventArgs e) {
-            if (ExecPath == "" || FilePath == "" || TargetPath == "") return;
-            string[] paths = new[] { ExecPath, FilePath, TargetPath };
+            if (ExecPath == null) { ErrFlash(txtExecPath); return; }
+            if (FilePath == null) { ErrFlash(txtFilePath); return; }
+            if (TargetPath == null) { ErrFlash(txtTargetPath); return; }
+
             var sw = Stopwatch.StartNew();
-            var l = listBox1.Items;
-            var c = l.Count; if (c == 0) return;
-            var arg = AddQuote(l[0].ToString());
-            for (int i = 1; i < c; i++) {
-                if (arg.Length > 30000) {
-                    Extract(paths, arg, StatusSetter);
-                    arg = AddQuote(l[i].ToString());
-                    continue;
+            string[] paths = new[] { ExecPath, FilePath, TargetPath };
+
+            string mask = "";
+            if (!FileUnread) {
+                var l = listBox1.Items; int c = l.Count;
+                if (c == 0) {
+                    SetStatus(LocDict.请选择, LocDict.错误);
+                    ErrFlash(statusStrip1);
+                    sw.Stop();
+                    return;
                 }
-                arg += " " + AddQuote(l[i].ToString());
+                mask = AddQuote(l[0].ToString());
+                for (int i = 1; i < c; i++) {
+                    if (mask.Length > 30000) {
+                        Extract(paths, mask, StatusSetter);
+                        mask = AddQuote(l[i].ToString());
+                        continue;
+                    }
+                    mask += " " + AddQuote(l[i].ToString());
+                }
             }
-            var r = Extract(paths, arg, StatusSetter);
+
+            var cmd = Extract(paths, mask, StatusSetter);
+            SetStatus(sw.Elapsed + "|" + cmd, LocDict.用时);
             sw.Stop();
-            ChangeStatus(sw.Elapsed.ToString() + "|" + r, CulDict["用时"]);
         }
         private static string Extract(string[] paths, string arg, Action<string> statusSetter = null) {
-            var ps = new ProcessStartInfo {
+            var ps = new ProcessStartInfo() {
                 FileName = paths[0],
                 Arguments = $"-x -a -y -d{AddQuote(paths[2])} {AddQuote(paths[1])} {arg}",
                 UseShellExecute = false,
@@ -386,9 +412,7 @@ namespace InnoUnpUI {
                 RedirectStandardError = true,
                 CreateNoWindow = true
             };
-            var p = new Process {
-                StartInfo = ps
-            };
+            var p = new Process() { StartInfo = ps };
             p.Start();
             if (statusSetter != null) {
                 var stdout = p.StandardOutput;
@@ -401,79 +425,20 @@ namespace InnoUnpUI {
         }
         #endregion
 
-        #region locale
-        private static Dictionary<string, string> CulDict = new Dictionary<string, string> {
-            { "读文件名", "读文件名" },
-            { "建文件树", "建文件树" },
-            { "量目录", "量目录" },
-            { "排序", "排序" },
-            { "出错", "出错" },
-            { "点击复制", "点击复制 " },
-            { "用时", "用时" },
-            { "已选择", "已选择" }
-        };
-        private void SetEnglish() {
-            CulDict = new Dictionary<string, string> {
-                { "读文件名", "Reading File Name" },
-                { "建文件树", "Building File Tree" },
-                { "量目录", "Sizing Dirs" },
-                { "排序", "Sorting" },
-                { "出错", "Error:" },
-                { "点击复制", "Click To Copy " },
-                { "用时", "Time Used:" },
-                { "已选择", "Selected:" }
-            };
-
-            var 浏览   = "Browser…";
-            btnOpenExec  .Text = 浏览;
-            btnOpenFile  .Text = 浏览;
-            btnOpenTarget.Text = 浏览;
-
-            label1.Text = "Program";
-            label2.Text = "File";
-            label3.Text = "Target";
-
-            btnLoadFile.Text = "Load";
-            btnExtract .Text = "Extract";
-            chkShowProg.Text = "Show Progress (100x slower)";
-
-            var 本层   = "This Level ";
-            var 下层   = "Next Level ";
-            var 全选   = "Select All";
-            var 反选   = "Reverse Select";
-            var 选文件 = "Select Files";
-            本层全选MenuItem  .Text = 本层 + 全选;
-            本层反选MenuItem  .Text = 本层 + 反选;
-            本层选文件MenuItem.Text = 本层 + 选文件;
-            下层全选MenuItem  .Text = 下层 + 全选;
-            下层反选MenuItem  .Text = 下层 + 反选;
-            下层选文件MenuItem.Text = 下层 + 选文件;
-        }
-        private void SetLocale() {
-            if (!Application.CurrentCulture.Name.StartsWith("zh"))
-                SetEnglish();
-#if DEBUG
-            //SetEnglish();
-            txtExecPath.Text = @"D:\程序\!工具\!文件相关\解包器\Installs\Inno\innounp\innounp.exe";
-            txtFilePath.Text = @"C:\Users\TF2017\Desktop\UiBot Creator_community_official_zh-cn_x64_V2020.09.28.0226.exe";
-#endif
-        }
-        #endregion
         #region status
         private void statusLabelContent_Click(object sender, EventArgs e)
             => Clipboard.SetText(statusLabelContent.Text);
-        private void ChangeStatus(string ctx, string title) {
+        private void SetStatus(string ctt, string title) {
             if (title != null) statusLabelTitle.Text = title;
-            statusLabelContent.Text = ctx;
-            statusLabelContent.ToolTipText = CulDict["点击复制"] + statusLabelContent.Text;
+            statusLabelContent.Text = ctt;
+            statusLabelContent.ToolTipText = LocDict.点击复制 + statusLabelContent.Text;
         }
-        private Action<string> StatusSetter = null;
-        private void chkShowProg_CheckedChanged(object sender, EventArgs e)
-            => StatusSetter = chkShowProg.Checked ? StatusSetterFunc : (Action<string>)null;
-        private void StatusSetterFunc(string str) {
-            statusLabelContent.Text = str;
-            Application.DoEvents();
-        }
+
+        private Action<string> StatusSetter
+            => chkShowProg.Checked ? str => {
+                    statusLabelContent.Text = str;
+                    Application.DoEvents();
+                } : (Action<string>)null;
         #endregion
         #region sizing
         private bool CtrlDown = false;
@@ -512,13 +477,74 @@ namespace InnoUnpUI {
             txtFilePath.Width   = width - txtFilePath.Left;
             txtExecPath.Width   = width - txtExecPath.Left;
             txtTargetPath.Width = width - txtTargetPath.Left;
-            btnExtract.Left     = width - btnExtract.Width;
         }
         private void btnOpenExec_Resize(object sender, EventArgs e) {
             int width = btnOpenExec.Width;
             btnOpenFile.Width   = width;
             btnOpenTarget.Width = width;
-            btnLoadFile.Width   = width;
+        }
+        #endregion
+
+        #region locale
+        private static class LocDict {
+            public static string 读文件名 = "读文件名";
+            public static string 建文件树 = "建文件树";
+            public static string 量目录 = "量目录";
+            public static string 排序 = "排序";
+            public static string 错误 = "错误";
+            public static string 点击复制 = "点击复制 ";
+            public static string 用时 = "用时";
+            public static string 已选择 = "已选择";
+            public static string 请选择 = "请在树状图中选择文件";
+        }
+
+        private void SetEnglish() {
+            LocDict.读文件名 = "Reading File Name";
+            LocDict.建文件树 = "Building File Tree";
+            LocDict.量目录 = "Sizing Dirs";
+            LocDict.排序 = "Sorting";
+            LocDict.错误 = "Error:";
+            LocDict.点击复制 = "Click To Copy ";
+            LocDict.用时 = "Time Used:";
+            LocDict.已选择 = "Selected:";
+            LocDict.请选择 = "Please select files in the tree view";
+
+            var 浏览   = "Browser…";
+            btnOpenExec  .Text = 浏览;
+            btnOpenFile  .Text = 浏览;
+            btnOpenTarget.Text = 浏览;
+
+            label1.Text = "Program";
+            label2.Text = "File";
+            label3.Text = "Target";
+
+            btnRead.Text = "View";
+            btnExtract .Text = "Extract";
+            chkShowProg.Text = "Show Progress (100x slower)";
+
+            var 本层   = "This Level ";
+            var 下层   = "Next Level ";
+            var 全选   = "Select All";
+            var 全不选 = "Unselect All";
+            var 反选   = "Reverse Select";
+            var 选文件 = "Select Files";
+
+            本层全选MenuItem  .Text = 本层 + 全选;
+            本层全不选MenuItem.Text = 本层 + 全不选;
+            本层反选MenuItem  .Text = 本层 + 反选;
+            本层选文件MenuItem.Text = 本层 + 选文件;
+
+            下层全选MenuItem  .Text = 下层 + 全选;
+            下层全不选MenuItem.Text = 下层 + 全不选;
+            下层反选MenuItem  .Text = 下层 + 反选;
+            下层选文件MenuItem.Text = 下层 + 选文件;
+        }
+        private void SetLocale() {
+            if (!Application.CurrentCulture.Name.StartsWith("zh"))
+                SetEnglish();
+#if DEBUG
+            SetEnglish();
+#endif
         }
         #endregion
         #region helpers
@@ -529,6 +555,30 @@ namespace InnoUnpUI {
             string unit = "BKMGTPE";
             var a = (int)Math.Log(size, 1024);
             return Math.Round(size / Math.Pow(1024, a), 2).ToString() + unit[a];
+        }
+
+        private void SetOkColor(Control ctrl) {
+            ctrl.BackColor = SystemColors.Window;
+            ctrl.ForeColor = Color.Black;
+        }
+        private void SetErrColor(Control ctrl) {
+            ctrl.BackColor = Color.FromArgb(255, 0xFF, 0x33, 0x33);
+            ctrl.ForeColor = Color.White;
+        }
+        private void ErrFlash(Control ctrl) {
+            var foreColor = ctrl.ForeColor;
+            var backColor = ctrl.BackColor;
+            for (int i = 0; i < 3; i++) {
+                System.Threading.Thread.Sleep(100);
+                SetOkColor(ctrl);
+                Application.DoEvents();
+
+                System.Threading.Thread.Sleep(100);
+                SetErrColor(ctrl);
+                Application.DoEvents();
+            }
+            ctrl.ForeColor = foreColor;
+            ctrl.BackColor = backColor;
         }
         #endregion
     }

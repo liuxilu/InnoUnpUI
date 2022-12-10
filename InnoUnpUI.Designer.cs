@@ -26,10 +26,12 @@
             this.components = new System.ComponentModel.Container();
             this.treeViewMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.本层全选MenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.本层全不选MenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.本层反选MenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.本层选文件MenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.下层全选MenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.下层全不选MenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.下层反选MenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.下层选文件MenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
@@ -37,21 +39,21 @@
             this.statusLabelTitle = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusLabelContent = new System.Windows.Forms.ToolStripStatusLabel();
             this.panelControls = new System.Windows.Forms.Panel();
-            this.chkShowProg = new System.Windows.Forms.CheckBox();
             this.panelTxt = new System.Windows.Forms.Panel();
+            this.btnRead = new System.Windows.Forms.Button();
+            this.btnExtract = new System.Windows.Forms.Button();
+            this.chkShowProg = new System.Windows.Forms.CheckBox();
             this.txtExecPath = new System.Windows.Forms.TextBox();
             this.txtFilePath = new System.Windows.Forms.TextBox();
             this.txtTargetPath = new System.Windows.Forms.TextBox();
-            this.btnExtract = new System.Windows.Forms.Button();
             this.panelLabel = new System.Windows.Forms.Panel();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.panelBtn = new System.Windows.Forms.Panel();
+            this.panelBrowser = new System.Windows.Forms.Panel();
             this.btnOpenExec = new System.Windows.Forms.Button();
             this.btnOpenFile = new System.Windows.Forms.Button();
             this.btnOpenTarget = new System.Windows.Forms.Button();
-            this.btnLoadFile = new System.Windows.Forms.Button();
             this.splitViews = new System.Windows.Forms.SplitContainer();
             this.treeView1 = new System.Windows.Forms.TreeView();
             this.listBox1 = new System.Windows.Forms.ListBox();
@@ -60,7 +62,7 @@
             this.panelControls.SuspendLayout();
             this.panelTxt.SuspendLayout();
             this.panelLabel.SuspendLayout();
-            this.panelBtn.SuspendLayout();
+            this.panelBrowser.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitViews)).BeginInit();
             this.splitViews.Panel1.SuspendLayout();
             this.splitViews.Panel2.SuspendLayout();
@@ -71,59 +73,75 @@
             // 
             this.treeViewMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.本层全选MenuItem,
+            this.本层全不选MenuItem,
             this.本层反选MenuItem,
             this.本层选文件MenuItem,
             this.menuItemSeparator1,
             this.下层全选MenuItem,
+            this.下层全不选MenuItem,
             this.下层反选MenuItem,
             this.下层选文件MenuItem});
             this.treeViewMenu.Name = "contextMenuStrip1";
-            this.treeViewMenu.Size = new System.Drawing.Size(171, 178);
+            this.treeViewMenu.Size = new System.Drawing.Size(171, 234);
             // 
             // 本层全选MenuItem
             // 
             this.本层全选MenuItem.Name = "本层全选MenuItem";
-            this.本层全选MenuItem.Size = new System.Drawing.Size(170, 28);
+            this.本层全选MenuItem.Size = new System.Drawing.Size(180, 28);
             this.本层全选MenuItem.Text = "本层全选";
             this.本层全选MenuItem.Click += new System.EventHandler(this.本层选MenuItem_Click);
+            // 
+            // 本层全不选MenuItem
+            // 
+            this.本层全不选MenuItem.Name = "本层全不选MenuItem";
+            this.本层全不选MenuItem.Size = new System.Drawing.Size(180, 28);
+            this.本层全不选MenuItem.Text = "本层全不选";
+            this.本层全不选MenuItem.Click += new System.EventHandler(this.本层选MenuItem_Click);
             // 
             // 本层反选MenuItem
             // 
             this.本层反选MenuItem.Name = "本层反选MenuItem";
-            this.本层反选MenuItem.Size = new System.Drawing.Size(170, 28);
+            this.本层反选MenuItem.Size = new System.Drawing.Size(180, 28);
             this.本层反选MenuItem.Text = "本层反选";
             this.本层反选MenuItem.Click += new System.EventHandler(this.本层选MenuItem_Click);
             // 
             // 本层选文件MenuItem
             // 
             this.本层选文件MenuItem.Name = "本层选文件MenuItem";
-            this.本层选文件MenuItem.Size = new System.Drawing.Size(170, 28);
+            this.本层选文件MenuItem.Size = new System.Drawing.Size(180, 28);
             this.本层选文件MenuItem.Text = "本层选文件";
             this.本层选文件MenuItem.Click += new System.EventHandler(this.本层选MenuItem_Click);
             // 
             // menuItemSeparator1
             // 
             this.menuItemSeparator1.Name = "menuItemSeparator1";
-            this.menuItemSeparator1.Size = new System.Drawing.Size(167, 6);
+            this.menuItemSeparator1.Size = new System.Drawing.Size(177, 6);
             // 
             // 下层全选MenuItem
             // 
             this.下层全选MenuItem.Name = "下层全选MenuItem";
-            this.下层全选MenuItem.Size = new System.Drawing.Size(170, 28);
+            this.下层全选MenuItem.Size = new System.Drawing.Size(180, 28);
             this.下层全选MenuItem.Text = "下层全选";
             this.下层全选MenuItem.Click += new System.EventHandler(this.下层选MenuItem_Click);
+            // 
+            // 下层全不选MenuItem
+            // 
+            this.下层全不选MenuItem.Name = "下层全不选MenuItem";
+            this.下层全不选MenuItem.Size = new System.Drawing.Size(180, 28);
+            this.下层全不选MenuItem.Text = "下层全不选";
+            this.下层全不选MenuItem.Click += new System.EventHandler(this.下层选MenuItem_Click);
             // 
             // 下层反选MenuItem
             // 
             this.下层反选MenuItem.Name = "下层反选MenuItem";
-            this.下层反选MenuItem.Size = new System.Drawing.Size(170, 28);
+            this.下层反选MenuItem.Size = new System.Drawing.Size(180, 28);
             this.下层反选MenuItem.Text = "下层反选";
             this.下层反选MenuItem.Click += new System.EventHandler(this.下层选MenuItem_Click);
             // 
             // 下层选文件MenuItem
             // 
             this.下层选文件MenuItem.Name = "下层选文件MenuItem";
-            this.下层选文件MenuItem.Size = new System.Drawing.Size(170, 28);
+            this.下层选文件MenuItem.Size = new System.Drawing.Size(180, 28);
             this.下层选文件MenuItem.Text = "下层选文件";
             this.下层选文件MenuItem.Click += new System.EventHandler(this.下层选MenuItem_Click);
             // 
@@ -161,40 +179,61 @@
             // 
             // panelControls
             // 
-            this.panelControls.Controls.Add(this.chkShowProg);
             this.panelControls.Controls.Add(this.panelTxt);
             this.panelControls.Controls.Add(this.panelLabel);
-            this.panelControls.Controls.Add(this.panelBtn);
+            this.panelControls.Controls.Add(this.panelBrowser);
             this.panelControls.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelControls.Location = new System.Drawing.Point(0, 0);
             this.panelControls.Name = "panelControls";
             this.panelControls.Size = new System.Drawing.Size(784, 157);
             this.panelControls.TabIndex = 5;
             // 
-            // chkShowProg
-            // 
-            this.chkShowProg.AutoSize = true;
-            this.chkShowProg.Location = new System.Drawing.Point(15, 121);
-            this.chkShowProg.Name = "chkShowProg";
-            this.chkShowProg.Size = new System.Drawing.Size(181, 23);
-            this.chkShowProg.TabIndex = 24;
-            this.chkShowProg.Text = "显示进度(慢百倍)";
-            this.chkShowProg.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.chkShowProg.UseVisualStyleBackColor = true;
-            this.chkShowProg.CheckedChanged += new System.EventHandler(this.chkShowProg_CheckedChanged);
-            // 
             // panelTxt
             // 
+            this.panelTxt.Controls.Add(this.btnRead);
+            this.panelTxt.Controls.Add(this.btnExtract);
+            this.panelTxt.Controls.Add(this.chkShowProg);
             this.panelTxt.Controls.Add(this.txtExecPath);
             this.panelTxt.Controls.Add(this.txtFilePath);
             this.panelTxt.Controls.Add(this.txtTargetPath);
-            this.panelTxt.Controls.Add(this.btnExtract);
             this.panelTxt.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelTxt.Location = new System.Drawing.Point(53, 0);
             this.panelTxt.Name = "panelTxt";
             this.panelTxt.Size = new System.Drawing.Size(627, 157);
             this.panelTxt.TabIndex = 26;
             this.panelTxt.Resize += new System.EventHandler(this.panelTxt_Resize);
+            // 
+            // btnRead
+            // 
+            this.btnRead.Location = new System.Drawing.Point(6, 119);
+            this.btnRead.Name = "btnRead";
+            this.btnRead.Size = new System.Drawing.Size(92, 29);
+            this.btnRead.TabIndex = 22;
+            this.btnRead.Text = "查看";
+            this.btnRead.UseVisualStyleBackColor = true;
+            this.btnRead.Click += new System.EventHandler(this.btnRead_Click);
+            // 
+            // btnExtract
+            // 
+            this.btnExtract.AutoSize = true;
+            this.btnExtract.Location = new System.Drawing.Point(104, 119);
+            this.btnExtract.Name = "btnExtract";
+            this.btnExtract.Size = new System.Drawing.Size(92, 29);
+            this.btnExtract.TabIndex = 23;
+            this.btnExtract.Text = "提取";
+            this.btnExtract.UseVisualStyleBackColor = true;
+            this.btnExtract.Click += new System.EventHandler(this.btnExtract_Click);
+            // 
+            // chkShowProg
+            // 
+            this.chkShowProg.AutoSize = true;
+            this.chkShowProg.Location = new System.Drawing.Point(202, 123);
+            this.chkShowProg.Name = "chkShowProg";
+            this.chkShowProg.Size = new System.Drawing.Size(181, 23);
+            this.chkShowProg.TabIndex = 24;
+            this.chkShowProg.Text = "显示进度(慢百倍)";
+            this.chkShowProg.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.chkShowProg.UseVisualStyleBackColor = true;
             // 
             // txtExecPath
             // 
@@ -219,17 +258,6 @@
             this.txtTargetPath.Size = new System.Drawing.Size(622, 29);
             this.txtTargetPath.TabIndex = 23;
             this.txtTargetPath.TextChanged += new System.EventHandler(this.txtTargetPath_TextChanged);
-            // 
-            // btnExtract
-            // 
-            this.btnExtract.AutoSize = true;
-            this.btnExtract.Location = new System.Drawing.Point(533, 119);
-            this.btnExtract.Name = "btnExtract";
-            this.btnExtract.Size = new System.Drawing.Size(92, 29);
-            this.btnExtract.TabIndex = 23;
-            this.btnExtract.Text = "提取";
-            this.btnExtract.UseVisualStyleBackColor = true;
-            this.btnExtract.Click += new System.EventHandler(this.btnExtract_Click);
             // 
             // panelLabel
             // 
@@ -270,19 +298,18 @@
             this.label3.TabIndex = 22;
             this.label3.Text = "目标";
             // 
-            // panelBtn
+            // panelBrowser
             // 
-            this.panelBtn.AutoSize = true;
-            this.panelBtn.Controls.Add(this.btnOpenExec);
-            this.panelBtn.Controls.Add(this.btnOpenFile);
-            this.panelBtn.Controls.Add(this.btnOpenTarget);
-            this.panelBtn.Controls.Add(this.btnLoadFile);
-            this.panelBtn.Dock = System.Windows.Forms.DockStyle.Right;
-            this.panelBtn.Location = new System.Drawing.Point(680, 0);
-            this.panelBtn.Name = "panelBtn";
-            this.panelBtn.Padding = new System.Windows.Forms.Padding(0, 0, 3, 0);
-            this.panelBtn.Size = new System.Drawing.Size(104, 157);
-            this.panelBtn.TabIndex = 27;
+            this.panelBrowser.AutoSize = true;
+            this.panelBrowser.Controls.Add(this.btnOpenExec);
+            this.panelBrowser.Controls.Add(this.btnOpenFile);
+            this.panelBrowser.Controls.Add(this.btnOpenTarget);
+            this.panelBrowser.Dock = System.Windows.Forms.DockStyle.Right;
+            this.panelBrowser.Location = new System.Drawing.Point(680, 0);
+            this.panelBrowser.Name = "panelBrowser";
+            this.panelBrowser.Padding = new System.Windows.Forms.Padding(0, 0, 3, 0);
+            this.panelBrowser.Size = new System.Drawing.Size(104, 157);
+            this.panelBrowser.TabIndex = 27;
             // 
             // btnOpenExec
             // 
@@ -316,16 +343,6 @@
             this.btnOpenTarget.UseVisualStyleBackColor = true;
             this.btnOpenTarget.Click += new System.EventHandler(this.btnOpenTarget_Click);
             // 
-            // btnLoadFile
-            // 
-            this.btnLoadFile.Location = new System.Drawing.Point(6, 119);
-            this.btnLoadFile.Name = "btnLoadFile";
-            this.btnLoadFile.Size = new System.Drawing.Size(92, 29);
-            this.btnLoadFile.TabIndex = 22;
-            this.btnLoadFile.Text = "读取";
-            this.btnLoadFile.UseVisualStyleBackColor = true;
-            this.btnLoadFile.Click += new System.EventHandler(this.btnLoadFile_Click);
-            // 
             // splitViews
             // 
             this.splitViews.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -356,6 +373,7 @@
             this.treeView1.Size = new System.Drawing.Size(391, 270);
             this.treeView1.TabIndex = 12;
             this.treeView1.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.treeView1_AfterCheck);
+            this.treeView1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.treeView1_MouseDown);
             // 
             // listBox1
             // 
@@ -391,8 +409,8 @@
             this.panelTxt.PerformLayout();
             this.panelLabel.ResumeLayout(false);
             this.panelLabel.PerformLayout();
-            this.panelBtn.ResumeLayout(false);
-            this.panelBtn.PerformLayout();
+            this.panelBrowser.ResumeLayout(false);
+            this.panelBrowser.PerformLayout();
             this.splitViews.Panel1.ResumeLayout(false);
             this.splitViews.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitViews)).EndInit();
@@ -430,11 +448,13 @@
         private System.Windows.Forms.TextBox txtExecPath;
         private System.Windows.Forms.TextBox txtTargetPath;
         private System.Windows.Forms.TextBox txtFilePath;
-        private System.Windows.Forms.Panel panelBtn;
+        private System.Windows.Forms.Panel panelBrowser;
         private System.Windows.Forms.Button btnOpenExec;
         private System.Windows.Forms.Button btnOpenTarget;
         private System.Windows.Forms.Button btnOpenFile;
-        private System.Windows.Forms.Button btnLoadFile;
+        private System.Windows.Forms.Button btnRead;
+        private System.Windows.Forms.ToolStripMenuItem 本层全不选MenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 下层全不选MenuItem;
     }
 }
 
